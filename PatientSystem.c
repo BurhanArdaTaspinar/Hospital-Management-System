@@ -2,123 +2,132 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-// hala geliştirilen bir koddur
-struct informationofPatients{ // Hasta struct
 
-int age;
-float weight;
-float height;
-char name[50];
-char phone[20];
-char IDnumber[30];
-char surName[50];
-char gender[10];
+// --- STRUCTURE DEFINITIONS ---
 
+// Structure to hold patient details
+struct informationofPatients {
+    int age;
+    float weight;
+    float height;
+    char name[50];
+    char phone[20];
+    char IDnumber[30];
+    char surName[50];
+    char gender[10];
 };
 
-struct informationofDoctors{ // doctors struct
-
-int id;
-char name[50];
-char branch[50];
-char phone[20];
-
-
+// Structure to hold doctor details
+struct informationofDoctors {
+    int id;
+    char name[50];
+    char branch[50];
+    char phone[20];
 };
 
-void patientRegister(struct informationofPatients*,int);
-
+// --- FUNCTION PROTOTYPES ---
+void patientRegister(struct informationofPatients*, int);
 void currentDoctors(void);
+void searchPatients(struct informationofPatients*, int);
+void saveToFile(struct informationofPatients*, int);
 
-void searchPatients(struct informationofPatients*,int);
+// --- MAIN FUNCTION ---
+int main() {
+    int choice, n;
+    struct informationofPatients *patients = NULL; // Pointer for dynamic array
 
-void saveToFile(struct informationofPatients *, int);
-    
+    while (1) {
+        // Main Menu Display
+        puts("____Welcome to the Hospital Management System____");
+        puts("Please select an operation:");
+        puts("1 - Register new patient(s)");
+        puts("2 - Make an appointment (View Doctors)");
+        puts("3 - Search for a patient");
+        puts("4 - EXIT");
 
-int main(){
-int choice,n;
-struct informationofPatients *patients = NULL;
+        printf("\nEnter your choice: ");
+        scanf("%d", &choice);
+        printf("\n");
 
-while(1){
+        if (choice == 4) break; // Exit condition
 
-puts("____Welcome to hospital____");
-puts("Choose process which you want");
-puts("1-to register a patient or patients");
-puts("2-to make an appointment and choose doctor");
-puts("3-to search a patient");
-puts("4-to EXIT");
+        switch (choice) {
+            case 1:
+                printf("Enter the number of patients to register: ");
+                scanf("%d", &n);
+                
+                // Dynamic memory allocation for patients
+                patients = (struct informationofPatients*) malloc(n * sizeof(struct informationofPatients));
 
-printf("\nEnter your choice:");
-scanf("%d",&choice);
-printf("\n");
+                if (patients == NULL) {
+                    printf("Memory allocation failed!\n");
+                    return 1;
+                }
 
-if(choice == 4)break;
+                patientRegister(patients, n); // Get inputs
+                saveToFile(patients, n);      // Save to .txt file
+                break;
 
-switch(choice){
+            case 2:
+                currentDoctors(); // Show doctor list
+                break;
 
-case 1:printf("Enter how many patients you will register:");
-scanf("%d",&n);
-patients = (struct informationofPatients*) malloc(n * sizeof(struct informationofPatients));
+            case 3:
+                searchPatients(patients, n); // Search in current memory
+                break;
 
-if(patients == NULL){
-printf("Memory allocation failed\n");
-return 1;
-}
+            default:
+                printf("Invalid choice! Please try again.\n");
+        }
+    }
 
-patientRegister(patients,n);
-saveToFile(patients,n);
-
-break;
-
-case 2:currentDoctors();break;
-
-case 3:searchPatients(patients,n);break;
-
-default:printf("Invalid choice\n");
-
-   } 
-}
-if(patients != NULL) {
+    // Free allocated memory before exiting
+    if (patients != NULL) {
         free(patients);
     }
 
     return 0;
 }
-void patientRegister(struct informationofPatients *patients,int n){ // Hasta bilgilerini alır ve ekrana yazdırır
-for(int i=0;i<n;i++){
 
-printf("\nEnter informations of patient %d:\n", i+1);
-    printf("Patient gender(Male/Female):");
-    scanf("%s",patients[i].gender);
+// --- FUNCTION IMPLEMENTATIONS ---
 
-if (strcmp(patients[i].gender, "Male") != 0 &&
-    strcmp(patients[i].gender, "Female") != 0) {
-    printf("ERROR: Only Male or Female allowed!\n");
-    i--;
-    continue;
+// Function to take patient information from the user
+void patientRegister(struct informationofPatients *patients, int n) {
+    for (int i = 0; i < n; i++) {
+        printf("\n--- Enter details for Patient %d ---\n", i + 1);
+
+        // Gender Input with Validation
+        printf("Gender (Male/Female): ");
+        scanf("%s", patients[i].gender);
+
+        if (strcmp(patients[i].gender, "Male") != 0 && strcmp(patients[i].gender, "Female") != 0) {
+            printf("ERROR: Invalid input! Only 'Male' or 'Female' allowed.\n");
+            i--; // Decrement index to retry this iteration
+            continue;
+        }
+
+        printf("Name: ");
+        scanf("%s", patients[i].name);
+        printf("Surname: ");
+        scanf("%s", patients[i].surName);
+        printf("Age: ");
+        scanf("%d", &patients[i].age);
+        printf("Weight (kg): ");
+        scanf("%f", &patients[i].weight);
+        printf("Height (cm): ");
+        scanf("%f", &patients[i].height);
+        printf("Phone number (no spaces): ");
+        scanf("%s", patients[i].phone);
+        printf("ID Number: ");
+        scanf("%s", patients[i].IDnumber);
+        
+        printf("\nPatient registered successfully!\n\n");
+    }
 }
 
-    printf("Patient name: ");
-    scanf("%s", patients[i].name);  
-    printf("Patient surname:");
-    scanf("%s",patients[i].surName);         
-    printf("Patient age: ");
-    scanf("%d", &patients[i].age);
-    printf("Patient weight: ");
-    scanf("%f", &patients[i].weight);
-    printf("Patient height: ");
-    scanf("%f", &patients[i].height);
-    printf("Phone number without space bar: ");
-    scanf("%s", patients[i].phone);
-    printf("Patient ID number: ");
-    scanf("%s", patients[i].IDnumber);
-    printf("\nPatient registered successfully!\n\n");
-
-}
-
-}
-void currentDoctors(void){
-
+// Function to display doctors based on branch selection
+void currentDoctors(void) {
+    // Database of doctors
     struct informationofDoctors doctors[] = {
         {101, "Dr. Ahmet Yilmaz", "Cardiology", "05321234567"},
         {102, "Dr. Ayse Demir", "Cardiology", "05321234568"},
@@ -147,31 +156,20 @@ void currentDoctors(void){
     int doctorCount = sizeof(doctors) / sizeof(doctors[0]);
     int branchChoice, doctorChoice;
 
-    printf("\nChoose a branch:\n");
-    printf("1 - Cardiology\n");
-    printf("2 - Orthopedics\n");
-    printf("3 - Neurology\n");
-    printf("4 - Internal Medicine\n");
-    printf("5 - Dermatology\n");
-    printf("6 - Pediatrics\n");
-    printf("7 - Ophthalmology\n");
-    printf("8 - ENT\n");
-    printf("9 - Psychiatry\n");
-    printf("10 - Urology\n");
-    printf("11 - Pulmonology\n");
-    printf("12 - Physical Therapy\n");
-    printf("13 - Infectious Diseases\n");
-    printf("14 - Endocrinology\n");
-    printf("15 - Gastroenterology\n");
-    printf("16 - Neurosurgery\n");
-    printf("17 - Cardiovascular Surgery\n");
-    printf("18 - Plastic Surgery\n");
-    printf("19 - OB/GYN\n");
+    // Branch Selection Menu
+    printf("\n--- Select a Medical Branch ---\n");
+    printf("1 - Cardiology\n2 - Orthopedics\n3 - Neurology\n4 - Internal Medicine\n");
+    printf("5 - Dermatology\n6 - Pediatrics\n7 - Ophthalmology\n8 - ENT\n");
+    printf("9 - Psychiatry\n10 - Urology\n11 - Pulmonology\n12 - Physical Therapy\n");
+    printf("13 - Infectious Diseases\n14 - Endocrinology\n15 - Gastroenterology\n");
+    printf("16 - Neurosurgery\n17 - Cardiovascular Surgery\n18 - Plastic Surgery\n19 - OB/GYN\n");
+    
     printf("Enter your choice: ");
     scanf("%d", &branchChoice);
 
     char selectedBranch[50];
 
+    // Branch Mapping
     switch(branchChoice){
         case 1: strcpy(selectedBranch,"Cardiology"); break;
         case 2: strcpy(selectedBranch,"Orthopedics"); break;
@@ -193,13 +191,14 @@ void currentDoctors(void){
         case 18: strcpy(selectedBranch,"Plastic Surgery"); break;
         case 19: strcpy(selectedBranch,"OB/GYN"); break;
         default:
-            printf("Invalid choice!\n");
+            printf("Invalid branch selection!\n");
             return;
     }
 
     printf("\nAvailable doctors in %s:\n", selectedBranch);
     int count = 0;
 
+    // Display doctors matching the selected branch
     for(int i = 0; i < doctorCount; i++){
         if(strcmp(doctors[i].branch, selectedBranch) == 0){
             count++;
@@ -210,11 +209,12 @@ void currentDoctors(void){
     }
 
     if(count == 0){
-        printf("No doctors available.\n");
+        printf("No doctors available in this branch.\n");
         return;
     }
 
-    printf("\nSelect doctor number (1-%d): ", count);
+    // Appointment Booking Logic
+    printf("\nSelect the doctor number (1-%d) to book: ", count);
     scanf("%d", &doctorChoice);
 
     if(doctorChoice >= 1 && doctorChoice <= count)
@@ -222,62 +222,64 @@ void currentDoctors(void){
     else
         printf("\nInvalid doctor selection!\n");
 }
-void searchPatients(struct informationofPatients* patients,int n){
 
-if(patients == NULL || n == 0) {
-        printf("No patients registered yet!\n\n");
+// Function to search for a patient by ID
+void searchPatients(struct informationofPatients* patients, int n) {
+    if(patients == NULL || n == 0) {
+        printf("No registered patients found in memory!\n\n");
         return;
     }
 
-char searchID[30];    
-printf("Enter a patient ID:\n");
-scanf("%s",searchID);
+    char searchID[30];    
+    printf("Enter the Patient ID to search: ");
+    scanf("%s", searchID);
 
-int found=0;
+    int found = 0;
 
-for(int i=0;i<n;i++){
-if(strcmp(patients[i].IDnumber,searchID)==0){
-printf("You found your patient...\n");
-printf("__Information about your found patient__\n");
-    printf("name: %s\n",patients[i].name);
-    printf("surname:%s\n",patients[i].surName);         
-    printf("age: %d\n",patients[i].age);
-    printf("weight: %.2f\n",patients[i].weight);
-    printf("height: %.2f\n",patients[i].height);
-    printf("Phone number: %s\n",patients[i].phone);
-    printf("ID number: %s\n",patients[i].IDnumber);
-printf("\n");
-found=1;
-break;
+    for(int i = 0; i < n; i++) {
+        if(strcmp(patients[i].IDnumber, searchID) == 0) {
+            printf("\n--- Patient Record Found ---\n");
+            printf("Name: %s\n", patients[i].name);
+            printf("Surname: %s\n", patients[i].surName);         
+            printf("Age: %d\n", patients[i].age);
+            printf("Weight: %.2f\n", patients[i].weight);
+            printf("Height: %.2f\n", patients[i].height);
+            printf("Phone: %s\n", patients[i].phone);
+            printf("ID: %s\n", patients[i].IDnumber);
+            printf("\n");
+            found = 1;
+            break;
+        }
+    }
 
-}
-}
-
-if(!found)
-     printf("Patient not found!\n");
-
+    if(!found)
+        printf("Patient with ID '%s' not found!\n", searchID);
 }
 
-void saveToFile(struct informationofPatients *patients, int n){
-
- FILE *fptr = fopen("C:\\Users\\LENOVO\\OneDrive\\Belgeler\\Data\\patients.txt", "w");  // append mode
+// Function to save patient data to a text file
+void saveToFile(struct informationofPatients *patients, int n) {
+    // UPDATED: Using relative path "patients.txt" so it works on any computer
+    FILE *fptr = fopen("patients.txt", "w"); // "w" mode overwrites. Use "a" to append.
     
     if(fptr == NULL) {
-        printf("File error!\n");
+        printf("Error: Could not create or open file!\n");
         return;
     }
 
-    for(int i=0;i<n;i++){
-    fprintf(fptr,"%s,%s,%d,%.2f,%.2f,%s,%s",
-            patients[i].name,
-            patients[i].surName,
-            patients[i].age,
-            patients[i].weight,
-            patients[i].height,
-            patients[i].phone,
-            patients[i].IDnumber);  
+    for(int i = 0; i < n; i++) {
+        fprintf(fptr, "%s,%s,%d,%.2f,%.2f,%s,%s\n",
+                patients[i].name,
+                patients[i].surName,
+                patients[i].age,
+                patients[i].weight,
+                patients[i].height,
+                patients[i].phone,
+                patients[i].IDnumber);  
     }
-printf("The process completed successfully\n\n");
+    
+    printf("Data saved to 'patients.txt' successfully.\n\n");
     fclose(fptr);
 }
+}
    
+
